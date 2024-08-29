@@ -5,57 +5,61 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"go-home/os"
+	"go-home/work"
 )
 
 type Runner struct {
 	OS      os.OS
-	Working Working
-}
-
-type runtime struct {
-	StartTime time.Time
-	EndTime   time.Time
-}
-
-func newRuntime() *runtime {
-	return &runtime{}
+	Working work.Working
 }
 
 func (r Runner) Run() (err error) {
-	var runtime *runtime
-
-start:
 	for {
-		if runtime == nil {
-			isWorkingDay, err := r.IsWorkingDay()
+		isWorkingDay := true
+		// isWorkingDay, err := r.IsWorkingDay()
+		// if err != nil {
+		// 	return err
+		// }
+
+		slog.Info(fmt.Sprintf("%s is working day", time.Now().Format(time.DateOnly)))
+
+		if isWorkingDay {
+			err = r.StartOneDay()
 			if err != nil {
 				return err
 			}
-
-			if !isWorkingDay {
-				time.Sleep(time.Until(NextDay(time.Now())))
-				goto start
-			}
-
-			runtime = newRuntime()
 		}
 
-		unlockTime, err := r.GetUnlockTime()
-		if err != nil {
-			if errors.Is(err, os.ErrNotFoundUnlockTime) {
-				runtime = nil
-				time.Sleep(time.Until(NextDay(time.Now())))
-				goto start
-			}
-		}
-
-		runtime.StartTime = unlockTime
-		runtime.EndTime = r.Working.EndTime(runtime.StartTime)
+		d := time.Until(NextDay(time.Now()))
+		slog.Info(fmt.Sprintf("等待 %s 后开始统计下一天", d))
+		time.Sleep(d)
 	}
+}
+
+func (r Runner) StartOneDay() error {
+	// get unlock time
+	unlockTime, err := r.GetUnlockTime()
+	if err != nil {
+		if errors.Is(err, os.ErrNotFoundUnlockTime) {
+			slog.Warn("今天上班期间没找到解锁时间，等待重新执行")
+			return nil
+		}
+		return err
+	}
+
+	slog.Info(fmt.Sprintf("开始执行，解锁时间为: %s", unlockTime.Format(time.TimeOnly)))
+
+	endTime := r.Working.EndTime(unlockTime)
+	slog.Info(fmt.Sprintf("预计下班时间为: %s", endTime.Format(time.TimeOnly)))
+
+	slog.Info(fmt.Sprintf("剩余时间为: %s", time.Until(endTime)))
+	time.Sleep(time.Until(endTime))
+	return r.OS.Notify(unlockTime, endTime)
 }
 
 func (r Runner) GetUnlockTime() (time.Time, error) {
