@@ -1,6 +1,4 @@
-//go:build darwin
-
-package main
+package os
 
 import (
 	"bytes"
@@ -11,7 +9,7 @@ import (
 )
 
 func init() {
-	runner.OS = new(MacOS)
+	RunnerOS = new(MacOS)
 }
 
 type MacOS struct{}
@@ -30,6 +28,10 @@ func (m *MacOS) GetUnlockTime() (time.Time, error) {
 
 	// 提取解锁时间
 	unlockTimeStr := strings.TrimSpace(out.String())
+
+	if len(unlockTimeStr) == 0 {
+		return time.Time{}, ErrNotFoundUnlockTime
+	}
 
 	// 解析解锁时间
 	unlockTime, err := time.Parse(time.DateTime, unlockTimeStr)

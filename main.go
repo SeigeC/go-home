@@ -3,6 +3,8 @@ package main
 import (
 	"log/slog"
 	"time"
+
+	"go-home/os"
 )
 
 type OS interface {
@@ -14,9 +16,8 @@ type Runner struct {
 	OS OS
 }
 
-var runner Runner
-
 func main() {
+	runner := Runner{OS: os.RunnerOS}
 	unlockTime, err := runner.OS.GetUnlockTime()
 	if err != nil {
 		slog.Error("获取解锁时间失败：", slog.Any("err", err))
