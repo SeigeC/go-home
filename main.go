@@ -3,20 +3,22 @@ package main
 import (
 	"log/slog"
 	"time"
+
+	"go-home/os"
 )
 
-type OS interface {
-	GetUnlockTime() (time.Time, error)
-	Notify(unlockTime, reminderTime time.Time) error
-}
-
-type Runner struct {
-	OS OS
+type Working interface {
+	StartTime() time.Time
+	EndTime(startTime time.Time) time.Time
 }
 
 var runner Runner
 
 func main() {
+	runner := Runner{
+		OS: os.RunnerOS,
+	}
+
 	unlockTime, err := runner.OS.GetUnlockTime()
 	if err != nil {
 		slog.Error("获取解锁时间失败：", slog.Any("err", err))
