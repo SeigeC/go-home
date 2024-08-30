@@ -34,7 +34,7 @@ func (m *MacOS) GetUnlockTime() (time.Time, error) {
 	}
 
 	// 解析解锁时间
-	unlockTime, err := time.Parse(time.DateTime, unlockTimeStr)
+	unlockTime, err := time.ParseInLocation(time.DateTime, unlockTimeStr, time.Local)
 	if err != nil {
 		return time.Time{}, err
 	}

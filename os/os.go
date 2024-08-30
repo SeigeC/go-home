@@ -1,6 +1,8 @@
 package os
 
-import "time"
+import (
+	"time"
+)
 
 type OS interface {
 	GetUnlockTime() (time.Time, error)

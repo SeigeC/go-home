@@ -2,40 +2,25 @@ package main
 
 import (
 	"log/slog"
-	"time"
 
 	"go-home/os"
+	"go-home/work"
 )
 
-type OS interface {
-	GetUnlockTime() (time.Time, error)
-	Notify(unlockTime, reminderTime time.Time) error
-}
-
-type Runner struct {
-	OS OS
-}
-
 func main() {
-	runner := Runner{OS: os.RunnerOS}
-	unlockTime, err := runner.OS.GetUnlockTime()
+	worker, err := work.NewWork("10:00", "19:00")
 	if err != nil {
-		slog.Error("获取解锁时间失败：", slog.Any("err", err))
+		slog.Error("work error", "err", err)
 		return
 	}
 
-	slog.Info("解锁时间", slog.String("time", unlockTime.Format(time.DateTime)))
+	runner := Runner{
+		OS:      os.RunnerOS,
+		Working: worker,
+	}
 
-	// 计算 9 小时后的时间
-	reminderTime := unlockTime.Add(9 * time.Hour)
-	slog.Info("提醒时间", slog.String("time", reminderTime.Format(time.DateTime)))
-
-	<-time.After(time.Until(reminderTime))
-
-	// 调用系统通知
-	err = runner.OS.Notify(unlockTime, reminderTime)
+	err = runner.Run()
 	if err != nil {
-		slog.Error("Error setting reminder:", slog.Any("err", err))
-		return
+		slog.Error("runner error", "err", err)
 	}
 }
