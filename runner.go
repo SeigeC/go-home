@@ -20,11 +20,10 @@ type Runner struct {
 
 func (r Runner) Run() (err error) {
 	for {
-		isWorkingDay := true
-		// isWorkingDay, err := r.IsWorkingDay()
-		// if err != nil {
-		// 	return err
-		// }
+		isWorkingDay, err := r.IsWorkingDay()
+		if err != nil {
+			return err
+		}
 
 		slog.Info(fmt.Sprintf("%s is working day", time.Now().Format(time.DateOnly)))
 
