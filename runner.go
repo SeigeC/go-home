@@ -25,13 +25,14 @@ func (r Runner) Run() (err error) {
 			return err
 		}
 
-		slog.Info(fmt.Sprintf("%s is working day", time.Now().Format(time.DateOnly)))
-
 		if isWorkingDay {
+			slog.Info(fmt.Sprintf("%s is working day", time.Now().Format(time.DateOnly)))
 			err = r.StartOneDay()
 			if err != nil {
 				return err
 			}
+		} else {
+			slog.Info(fmt.Sprintf("%s is not working day", time.Now().Format(time.DateOnly)))
 		}
 
 		d := time.Until(NextDay(time.Now()))
@@ -63,8 +64,10 @@ func (r Runner) StartOneDay() error {
 
 func (r Runner) GetUnlockTime() (time.Time, error) {
 	// 没到上班时间等待到上班时间
-	if !time.Now().Before(r.Working.StartTime()) {
-		time.Sleep(time.Until(r.Working.StartTime()))
+	if time.Now().Before(r.Working.StartTime()) {
+		d := time.Until(r.Working.StartTime())
+		slog.Info(fmt.Sprintf("等待到上班时间，等待 %s", d))
+		time.Sleep(d)
 	}
 
 	endTime := r.Working.EndTime(r.Working.StartTime())
