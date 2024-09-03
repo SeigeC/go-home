@@ -79,7 +79,9 @@ func (r Runner) GetUnlockTime() (time.Time, error) {
 				if time.Now().After(endTime) {
 					return time.Time{}, os.ErrNotFoundUnlockTime
 				}
-				time.Sleep(5 * time.Minute)
+				d := 5 * time.Minute
+				slog.Info(fmt.Sprintf("等待 %s 后再次寻找解锁时间", d))
+				time.Sleep(d)
 				continue
 			}
 			return time.Time{}, err
